@@ -1,22 +1,31 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import "dotenv/config";
 
-// Use a global variable that persists across Next.js hot-reloads
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+  prisma: PrismaClient | undefined;
+};
 
 export const getPrisma = (): PrismaClient => {
   if (!globalForPrisma.prisma) {
-    // 1. Check if DATABASE_URL exists right when the API is hit
-    if (!process.env.DATABASE_URL) {
-      throw new Error("DATABASE_URL is missing from environment variables.")
+    // For serverless routes, we want the runtime to utilize the Pooled connection URL
+    const connectionString = process.env.DATABASE_URL_POOL;
+
+    if (!connectionString) {
+      throw new Error("DATABASE_URL_POOL is not set in environment variables");
     }
 
-    // 2. Safely initialize Prisma Client
+    // Pass the pooled connection string into the Neon Serverless driver adapter
+    const adapter = new PrismaNeon({ connectionString });
+
     globalForPrisma.prisma = new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    })
+      adapter,
+      log:
+        process.env.NODE_ENV === "development"
+          ? ["query", "error", "warn"]
+          : ["error"],
+    });
   }
-  
-  return globalForPrisma.prisma
-}
+
+  return globalForPrisma.prisma;
+};

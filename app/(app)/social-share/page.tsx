@@ -26,7 +26,8 @@ const socialFormats = {
             setIsTransforming(true);
         }
     }, [selectedFormat, uploadedImage])
-
+    
+    // handle the file upload to the server and get the publicId from cloudinary
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if(!file) return;

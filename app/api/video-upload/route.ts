@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { auth } from '@clerk/nextjs/server';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/db';
 
-
-const prisma = new PrismaClient()
+const prisma = getPrisma();
 
 // Configuration
 cloudinary.config({
@@ -55,15 +54,17 @@ export async function POST(request: NextRequest) {
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        const result = await new Promise<CloudinaryUploadResult>(
+const result = await new Promise<CloudinaryUploadResult>(
             (resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     {
                         resource_type: "video",
                         folder: "video-uploads",
-                        transformation: [
-                            { quality: "auto", fetch_format: "mp4" },
-                        ]
+                        // 🔹 Using eager transformations ensures smooth background processing
+                        eager: [
+                            { quality: "auto", fetch_format: "mp4" }
+                        ],
+                        eager_async: false
                     },
                     (error, result) => {
                         if (error) reject(error);

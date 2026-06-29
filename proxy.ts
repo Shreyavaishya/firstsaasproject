@@ -8,10 +8,6 @@ const isPublicPageRoute = createRouteMatcher([
     "/sign-up(.*)",
 ]);
 
-const isDashboardRoute = createRouteMatcher([
-    "/home(.*)"
-]);
-
 const isPublicApiRoute = createRouteMatcher([
     "/api/videos"
 ]);
@@ -22,7 +18,7 @@ export default clerkMiddleware(async (auth, req) => {
     const isApiRequest = currentUrl.pathname.startsWith("/api");
 
     // Case 1: Logged-in user trying to access landing, sign-in, or sign-up pages
-    // Redirect them straight to the dashboard
+    // Redirect them straight to their dashboard (/home)
     if (userId && isPublicPageRoute(req)) {
         return NextResponse.redirect(new URL("/home", req.url));
     }
@@ -37,8 +33,10 @@ export default clerkMiddleware(async (auth, req) => {
             );
         }
 
-        // If it's a protected frontend page (like /home), redirect to sign-in
-        if (!isPublicPageRoute(req) && isDashboardRoute(req)) {
+        // 🔹 FIX: If it's NOT a public page or an allowed Clerk internal route, 
+        // redirect them safely to /sign-in
+        const isClerkInternal = currentUrl.pathname.startsWith('/__clerk');
+        if (!isPublicPageRoute(req) && !isClerkInternal) {
             return NextResponse.redirect(new URL("/sign-in", req.url));
         }
     }

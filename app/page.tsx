@@ -30,7 +30,7 @@ export default function Home() {
           </nav>
 
           <Link
-            href="/upload"
+            href="/video-upload"
             className="rounded-full bg-linear-to-r from-purple-500 to-cyan-500 px-5 py-2 text-sm font-semibold text-white shadow-lg transition hover:scale-105"
           >
             Get Started
@@ -64,7 +64,7 @@ export default function Home() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/upload"
+                href="/video-upload"
                 className="rounded-xl bg-linear-to-r from-purple-500 to-cyan-500 px-6 py-3 text-center font-semibold text-white shadow-lg transition hover:scale-105"
               >
                 Start Uploading
@@ -230,7 +230,7 @@ export default function Home() {
 
           <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
             <Link
-              href="/upload"
+              href="/video-upload"
               className="rounded-xl bg-linear-to-r from-purple-500 to-cyan-500 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-105"
             >
               Upload Now

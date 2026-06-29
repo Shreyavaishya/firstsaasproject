@@ -1,5 +1,9 @@
-import { SignIn } from '@clerk/nextjs'
+import { SignIn } from "@clerk/nextjs";
 
-export default function Page() {
-  return <SignIn />
+export default function SignInPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <SignIn appearance={{ variables: { colorPrimary: "#a855f7" } }} />
+    </div>
+  );
 }

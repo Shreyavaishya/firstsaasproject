@@ -32,8 +32,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-
     if(
         !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
         !process.env.CLOUDINARY_API_KEY ||
@@ -42,16 +40,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({error: "Cloudinary credentials not found"}, {status: 500})
     }
 
-
-        const formData = await request.formData();
+     const formData = await request.formData();
         const file = formData.get("file") as File | null;
         const title = formData.get("title") as string;
         const description = formData.get("description") as string;
-        const originalSize = formData.get("originalSize") as string;
 
-        if(!file){
-            return NextResponse.json({error: "File not found"}, {status: 400})
+        if (!file) {
+            return NextResponse.json({ error: "File not found" }, { status: 400 })
         }
+
+        // 🔹 Capture file size as an integer directly from the File object metadata
+        const fileOriginalSize = file.size; 
 
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
@@ -63,27 +62,30 @@ export async function POST(request: NextRequest) {
                         resource_type: "video",
                         folder: "video-uploads",
                         transformation: [
-                            {quality: "auto", fetch_format: "mp4"},
+                            { quality: "auto", fetch_format: "mp4" },
                         ]
                     },
                     (error, result) => {
-                        if(error) reject(error);
+                        if (error) reject(error);
                         else resolve(result as CloudinaryUploadResult);
                     }
                 )
                 uploadStream.end(buffer)
             }
         )
+
+        // 🔹 FIX: Map database values cleanly as native integers to match schema.prisma
         const video = await prisma.video.create({
             data: {
                 title,
-                description,
+                description: description || null,
                 publicId: result.public_id,
-                originalSize: originalSize,
-                compressedSize: String(result.bytes),
+                originalSize: fileOriginalSize,        // Passed as a native number Int
+                compressedSize: Math.round(result.bytes), // Passed as a native number Int
                 duration: result.duration || 0,
             }
         })
+
         return NextResponse.json(video)
 
     } catch (error) {

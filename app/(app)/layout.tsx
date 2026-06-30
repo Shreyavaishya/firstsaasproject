@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
 import { Video, Image, Upload, Home, LayoutDashboard } from 'lucide-react'
 
-export default function DashboardLayout({
+export default function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const pathname = usePathname()
 
+  // 🔹 Core navigation links that swap screens within your sidebar shell
   const navItems = [
     { label: "Home Dashboard", href: "/home", icon: Home },
     { label: "Video Upload", href: "/video-upload", icon: Upload },
@@ -21,10 +22,11 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-neutral-950 text-white">
       
-      {/* 🔹 Left Fixed Navigation Sidebar */}
-      <aside className="w-64 border-r border-neutral-800 bg-neutral-900/50 p-6 flex-col justify-between hidden md:flex">
+      {/* 🔹 Left Fixed Navigation Sidebar (Visible on Desktop) */}
+      <aside className="w-64 border-r border-neutral-800 bg-neutral-900/50 p-6 flex flex-col justify-between md:flex">
         <div className="space-y-8">
-          {/* Logo Header */}
+          
+          {/* Platform Branding */}
           <div className="flex items-center gap-2 px-2">
             <LayoutDashboard className="w-6 h-6 text-purple-500" />
             <span className="text-xl font-extrabold tracking-tight bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -32,7 +34,7 @@ export default function DashboardLayout({
             </span>
           </div>
 
-          {/* Navigation Links list */}
+          {/* Dynamic Sidebar Links list */}
           <nav className="space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -58,26 +60,26 @@ export default function DashboardLayout({
         {/* User Account Controls footer area */}
         <div className="border-t border-neutral-800 pt-4 flex items-center justify-between px-2">
           <div className="flex flex-col">
-            <span className="text-xs text-neutral-500">Logged in as</span>
-            <span className="text-sm font-semibold text-neutral-300">Workspace User</span>
+            <span className="text-xs text-neutral-500">Workspace</span>
+            <span className="text-sm font-semibold text-neutral-300">Creator Panel</span>
           </div>
-          < UserButton />
+          <UserButton />
         </div>
       </aside>
 
       {/* 🔹 Main Content View Pane */}
       <div className="flex-1 flex flex-col min-w-0">
         
-        {/* Mobile Navbar Header */}
+        {/* Mobile Top Navbar Header (Visible only on mobile devices) */}
         <header className="md:hidden flex justify-between items-center bg-neutral-900/40 p-4 border-b border-neutral-800">
-          <span className="text-lg font-extrabold text-purple-400"> Pixora</span>
+          <span className="text-lg font-extrabold text-purple-400">Pixora</span>
           <UserButton />
         </header>
 
-        {/* Nested App Views Route Controller */}
-        <div className="flex-1 overflow-y-auto">
+        {/* This dynamically swaps out /home, /video-upload, and /social-share code views */}
+        <main className="flex-1 overflow-y-auto">
           {children}
-        </div>
+        </main>
       </div>
 
     </div>

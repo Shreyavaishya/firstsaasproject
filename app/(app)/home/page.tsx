@@ -55,7 +55,7 @@ function Home() {
         <main className="min-h-screen bg-neutral-950 text-white p-8">
             {/* 🔹 Top Header Area */}
             <header className="flex justify-between items-center border-b border-neutral-800 pb-4 mb-8">
-                <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                     Pixora
                 </h1>
                 <div className="flex items-center gap-4">

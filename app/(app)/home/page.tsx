@@ -46,7 +46,7 @@ function Home() {
         return (
             <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
                 <span className="loading loading-spinner loading-lg text-purple-500"></span>
-                <p className="ml-3 text-neutral-400">Loading your MediaVault...</p>
+                <p className="ml-3 text-neutral-400">Loading your Pixora...</p>
             </div>
         )
     }
@@ -56,7 +56,7 @@ function Home() {
             {/* 🔹 Top Header Area */}
             <header className="flex justify-between items-center border-b border-neutral-800 pb-4 mb-8">
                 <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                    MediaVault
+                    Pixora
                 </h1>
                 <div className="flex items-center gap-4">
                     <UserButton />
@@ -70,7 +70,7 @@ function Home() {
                 {/* 🚀 Integrated Upload Button */}
                 <Link 
                     href="/video-upload" 
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium px-5 py-2.5 rounded-lg shadow-lg hover:opacity-90 transition flex items-center gap-2"
+                    className="bg-linear-to-r from-purple-500 to-blue-500 text-white font-medium px-5 py-2.5 rounded-lg shadow-lg hover:opacity-90 transition flex items-center gap-2"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 12 12M12 3v13.5" />

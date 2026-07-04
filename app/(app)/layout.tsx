@@ -2,8 +2,14 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { UserButton } from '@clerk/nextjs'
+import dynamic from 'next/dynamic'
 import { Video, Image, Upload, Home, LayoutDashboard } from 'lucide-react'
+
+// 🚀 Dynamically load your Client Wrapper Button to eliminate Hydration errors
+const ClientUserButton = dynamic(() => import('@/components/ClientUserButton'), {
+  ssr: false,
+  loading: () => <div className="h-8 w-8 animate-pulse rounded-full bg-base-300" />,
+});
 
 // 🎨 List of popular themes to display in your dropdown menu
 const AVAILABLE_THEMES = [
@@ -46,7 +52,7 @@ export default function AppLayout({
     <div className="flex min-h-screen bg-base-100 text-base-content" data-theme={theme}>
       
       {/* 🔹 Left Navigation Sidebar */}
-      <aside className="w-64 border-r border-base-300 bg-base-200 p-6 flex flex-col justify-between hidden md:flex">
+      <aside className="w-64 border-r border-base-300 bg-base-200 p-6 flex flex-col justify-between md:flex">
         <div className="space-y-8">
           
           {/* Branding Header */}
@@ -102,7 +108,8 @@ export default function AppLayout({
             <span className="text-xs opacity-50">Workspace</span>
             <span className="text-sm font-semibold">Creator Panel</span>
           </div>
-          <UserButton />
+          {/* Swapped with the safe dynamic client component */}
+          <ClientUserButton />
         </div>
       </aside>
 
@@ -110,7 +117,8 @@ export default function AppLayout({
       <div className="flex-1 flex flex-col min-w-0">
         <header className="md:hidden flex justify-between items-center bg-base-200 p-4 border-b border-base-300">
           <span className="text-lg font-extrabold text-primary">Pixora</span>
-          <UserButton />
+          {/* Swapped with the safe dynamic client component */}
+          <ClientUserButton />
         </header>
 
         <main className="flex-1 overflow-y-auto">

@@ -13,7 +13,7 @@ export default function CTA() {
       transition={{ duration: 0.6 }}
       className="mx-auto max-w-7xl px-6 py-20"
     >
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-purple-600/20 via-zinc-900 to-cyan-600/20 p-10 text-center shadow-2xl backdrop-blur">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-r from-purple-600/20 via-zinc-900 to-cyan-600/20 p-10 text-center shadow-2xl backdrop-blur">
 
         {/* glow effect */}
         <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-purple-500/20 blur-3xl" />
@@ -31,7 +31,7 @@ export default function CTA() {
             
             <Link
               href="/video-upload"
-              className="rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-105 hover:shadow-purple-500/30"
+              className="rounded-xl bg-linear-to-r from-purple-500 to-cyan-500 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-105 hover:shadow-purple-500/30"
             >
               Upload Now
             </Link>

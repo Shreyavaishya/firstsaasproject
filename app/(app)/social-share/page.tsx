@@ -94,49 +94,51 @@ export default function SocialShare() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      {/* background glow */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-purple-600/20 blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
+    // Swapped bg-black text-white for dynamic semantic classes
+    <main className="min-h-screen bg-base-100 text-base-content relative">
+      {/* Background glow utilizing theme variables */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-10 right-10 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
       </div>
 
       <div className="mx-auto max-w-5xl px-6 py-12">
         {/* Heading */}
         <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm text-purple-300">
+          <div className="mb-4 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary">
             <Sparkles className="mr-2 h-4 w-4" />
             Social Media Image Creator
           </div>
 
           <h1 className="text-4xl font-bold md:text-5xl">
             Create Perfect{" "}
-            <span className="bg-linear-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Social Media Images
             </span>
           </h1>
 
-          <p className="mx-auto mt-4 max-w-2xl text-zinc-400">
+          <p className="mx-auto mt-4 max-w-2xl opacity-70">
             Upload your image, choose the platform format, and instantly generate
             optimized versions for Instagram, Twitter, Facebook, and more.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        {/* Outer panel card using base-200 */}
+        <div className="rounded-3xl border border-base-300 bg-base-200/50 p-8 shadow-2xl backdrop-blur-xl">
           {/* Upload section */}
           <div>
             <h2 className="mb-4 text-2xl font-semibold">Upload an Image</h2>
 
-            <div className="rounded-2xl border border-dashed border-purple-500/30 bg-zinc-950/60 p-6 transition hover:border-purple-400">
+            <div className="rounded-2xl border border-dashed border-primary/30 bg-base-100/60 p-6 transition hover:border-primary">
               <label className="flex cursor-pointer flex-col items-center justify-center text-center">
-                <div className="mb-4 rounded-2xl bg-purple-500/10 p-4">
-                  <Upload className="h-8 w-8 text-purple-400" />
+                <div className="mb-4 rounded-2xl bg-primary/10 p-4">
+                  <Upload className="h-8 w-8 text-primary" />
                 </div>
 
-                <p className="text-lg font-medium text-white">
+                <p className="text-lg font-medium">
                   Click to choose an image
                 </p>
-                <p className="mt-2 text-sm text-zinc-400">
+                <p className="mt-2 text-sm opacity-60">
                   JPG, PNG, WEBP supported
                 </p>
 
@@ -151,10 +153,10 @@ export default function SocialShare() {
 
             {isUploading && (
               <div className="mt-6">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
-                  <div className="h-full animate-pulse rounded-full bg-linear-to-r from-purple-500 to-cyan-500" />
+                <div className="h-2 w-full overflow-hidden rounded-full bg-base-300">
+                  <div className="h-full animate-pulse rounded-full bg-gradient-to-r from-primary to-secondary" />
                 </div>
-                <p className="mt-2 text-sm text-zinc-400">Uploading image...</p>
+                <p className="mt-2 text-sm opacity-60">Uploading image...</p>
               </div>
             )}
           </div>
@@ -168,14 +170,15 @@ export default function SocialShare() {
                   Select Social Media Format
                 </h2>
 
-                <label className="mb-2 block text-sm font-medium text-zinc-300">
+                <label className="mb-2 block text-sm font-medium opacity-80">
                   Choose a format
                 </label>
 
                 <div className="relative">
-                  <Crop className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
+                  <Crop className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 opacity-60" />
+                  {/* Using standard DaisyUI select class */}
                   <select
-                    className="w-full appearance-none rounded-xl border border-white/10 bg-zinc-900/80 py-3 pl-12 pr-4 text-white outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
+                    className="select select-bordered w-full rounded-xl bg-base-100 py-3 pl-12 pr-4 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                     value={selectedFormat}
                     onChange={(e) =>
                       setSelectedFormat(e.target.value as SocialFormat)
@@ -189,23 +192,25 @@ export default function SocialShare() {
                   </select>
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-white/10 bg-zinc-900/60 p-5">
+                {/* Sub-container box using clear layout depth splits */}
+                <div className="mt-6 rounded-2xl border border-base-300 bg-base-100 p-5">
                   <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-                    <ImageIcon className="h-5 w-5 text-cyan-400" />
+                    <ImageIcon className="h-5 w-5 text-secondary" />
                     Selected Output
                   </h3>
-                  <p className="text-zinc-300">{selectedFormat}</p>
-                  <p className="mt-2 text-sm text-zinc-400">
+                  <p className="font-medium">{selectedFormat}</p>
+                  <p className="mt-2 text-sm opacity-70">
                     Resolution: {socialFormats[selectedFormat].width} ×{" "}
                     {socialFormats[selectedFormat].height}
                   </p>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm opacity-70">
                     Aspect Ratio: {socialFormats[selectedFormat].aspectRatio}
                   </p>
                 </div>
 
+                {/* DaisyUI Button conversion */}
                 <button
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-500 to-cyan-500 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.01]"
+                  className="btn btn-primary mt-6 flex w-full items-center justify-center gap-2 rounded-xl text-white shadow-lg transition hover:scale-[1.01]"
                   onClick={handleDownload}
                 >
                   <Download className="h-5 w-5" />
@@ -217,19 +222,20 @@ export default function SocialShare() {
               <div>
                 <h3 className="mb-4 text-2xl font-semibold">Preview</h3>
 
-                <div className="relative flex min-h-80 items-center justify-center rounded-3xl border border-white/10 bg-zinc-950/70 p-4">
+                {/* Canvas card setup */}
+                <div className="relative flex min-h-80 items-center justify-center rounded-3xl border border-base-300 bg-base-100 p-4">
                   {isTransforming && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-black/50 backdrop-blur-sm">
+                    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-base-300/50 backdrop-blur-sm">
                       <div className="flex flex-col items-center gap-3">
-                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-700 border-t-purple-400"></div>
-                        <p className="text-sm text-zinc-300">
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-base-200 border-t-primary"></div>
+                        <p className="text-sm opacity-80">
                           Transforming image...
                         </p>
                       </div>
                     </div>
                   )}
 
-                  <div className="overflow-hidden rounded-2xl border border-white/10 shadow-lg">
+                  <div className="overflow-hidden rounded-2xl border border-base-300 shadow-lg">
                     <CldImage
                       width={socialFormats[selectedFormat].width}
                       height={socialFormats[selectedFormat].height}

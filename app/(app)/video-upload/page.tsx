@@ -51,82 +51,86 @@ function VideoUpload() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      {/* background glow */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-purple-600/20 blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
+    // Changed bg-black text-white to dynamic semantic variables
+    <main className="min-h-screen bg-base-100 text-base-content relative">
+      {/* Background glow adapts softly to themes using opacity */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-10 right-10 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
       </div>
 
       <div className="mx-auto max-w-4xl px-6 py-12">
-        {/* heading */}
+        {/* Heading */}
         <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm text-purple-300">
+          <div className="mb-4 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary">
             <Sparkles className="mr-2 h-4 w-4" />
             Upload & Manage Your Videos
           </div>
 
           <h1 className="text-4xl font-bold md:text-5xl">
             Upload Your{" "}
-            <span className="bg-linear-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
               Video Content
             </span>
           </h1>
 
-          <p className="mx-auto mt-4 max-w-2xl text-zinc-400">
+          {/* Muted content description color */}
+          <p className="mx-auto mt-4 max-w-2xl opacity-70">
             Add your video, title, and description to upload content securely and
             keep everything organized in one place.
           </p>
         </div>
 
-        {/* upload card */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        {/* Card wrapper uses bg-base-200 for layered depth */}
+        <div className="rounded-3xl border border-base-300 bg-base-200/50 p-8 shadow-xl backdrop-blur-xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-zinc-300">
+              <label className="mb-2 block text-sm font-medium opacity-80">
                 Video Title
               </label>
+              {/* Using native DaisyUI input styling for flawless theme adaptation */}
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter video title"
-                className="w-full rounded-xl border border-white/10 bg-zinc-900/80 px-4 py-3 text-white outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
+                className="input input-bordered w-full rounded-xl bg-base-100 px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                 required
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-zinc-300">
+              <label className="mb-2 block text-sm font-medium opacity-80">
                 Description
               </label>
+              {/* Using native DaisyUI textarea styling */}
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Write a short description about your video"
                 rows={5}
-                className="w-full rounded-xl border border-white/10 bg-zinc-900/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30"
+                className="textarea textarea-bordered w-full rounded-xl bg-base-100 px-4 py-3 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
               />
             </div>
 
             {/* File Upload */}
             <div>
-              <label className="mb-3 block text-sm font-medium text-zinc-300">
+              <label className="mb-3 block text-sm font-medium opacity-80">
                 Video File
               </label>
 
-              <div className="rounded-2xl border border-dashed border-purple-500/30 bg-zinc-950/60 p-6 transition hover:border-purple-400">
+              <div className="rounded-2xl border border-dashed border-primary/30 bg-base-100/60 p-6 transition hover:border-primary">
                 <label className="flex cursor-pointer flex-col items-center justify-center text-center">
-                  <div className="mb-4 rounded-2xl bg-purple-500/10 p-4">
-                    <Upload className="h-8 w-8 text-purple-400" />
+                  <div className="mb-4 rounded-2xl bg-primary/10 p-4">
+                    <Upload className="h-8 w-8 text-primary" />
                   </div>
 
-                  <p className="text-lg font-medium text-white">
+                  <p className="text-lg font-medium">
                     Click to choose a video
                   </p>
-                  <p className="mt-2 text-sm text-zinc-400">
+                  <p className="mt-2 text-sm opacity-60">
                     MP4, MOV, AVI supported • Max size 70 MB
                   </p>
 
@@ -141,16 +145,16 @@ function VideoUpload() {
 
                 {/* Selected file preview */}
                 {file && (
-                  <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mt-6 rounded-2xl border border-base-300 bg-base-200 p-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-cyan-500/10 p-3">
-                        <FileVideo className="h-6 w-6 text-cyan-400" />
+                      <div className="rounded-xl bg-secondary/10 p-3">
+                        <FileVideo className="h-6 w-6 text-secondary" />
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-white">
+                        <p className="truncate font-medium">
                           {file.name}
                         </p>
-                        <p className="text-sm text-zinc-400">
+                        <p className="text-sm opacity-60">
                           {(file.size / (1024 * 1024)).toFixed(2)} MB
                         </p>
                       </div>
@@ -160,11 +164,11 @@ function VideoUpload() {
               </div>
             </div>
 
-            {/* Upload button */}
+            {/* Dynamic Button utilizing DaisyUI classes */}
             <button
               type="submit"
               disabled={isUploading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-500 to-cyan-500 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
+              className="btn btn-primary w-full gap-2 rounded-xl text-white shadow-lg transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isUploading ? (
                 <>

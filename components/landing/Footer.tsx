@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-sm text-zinc-400 md:flex-row">
         <p>© 2026 Pixora. All rights reserved.</p>
 
-        <div className="flex gap-6">
+        {/* <div className="flex gap-6">
           <a href="#features" className="hover:text-white">
             Features
           </a>
@@ -14,7 +14,7 @@ export default function Footer() {
           <a href="#upload" className="hover:text-white">
             Upload
           </a>
-        </div>
+        </div> */}
       </div>
     </footer>
   );

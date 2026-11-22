@@ -3,8 +3,6 @@ import { v2 as cloudinary } from 'cloudinary';
 import { auth } from '@clerk/nextjs/server';
 import { getPrisma } from '@/lib/db';
 
-const prisma = getPrisma();
-
 // Configuration
 cloudinary.config({
     cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -15,6 +13,7 @@ cloudinary.config({
 interface CloudinaryUploadResult {
     public_id: string;
     bytes: number;
+    eager?: { bytes?: number }[];
     duration?: number
     [key: string]: any
 }
@@ -23,6 +22,7 @@ export async function POST(request: NextRequest) {
 
 
     try {
+    const prisma = getPrisma();
     const { userId } = await auth();
 
     if (!userId) {
@@ -46,6 +46,12 @@ export async function POST(request: NextRequest) {
 
         if (!file) {
             return NextResponse.json({ error: "File not found" }, { status: 400 })
+        }
+        if (!file.type.startsWith("video/")) {
+            return NextResponse.json({ error: "Only video files are allowed" }, { status: 400 })
+        }
+        if (!title || !title.trim()) {
+            return NextResponse.json({ error: "Title is required" }, { status: 400 })
         }
 
         // 🔹 Capture file size as an integer directly from the File object metadata
@@ -78,11 +84,13 @@ const result = await new Promise<CloudinaryUploadResult>(
         // 🔹 FIX: Map database values cleanly as native integers to match schema.prisma
         const video = await prisma.video.create({
             data: {
-                title,
+                userId,
+                title: title.trim(),
                 description: description || null,
                 publicId: result.public_id,
                 originalSize: fileOriginalSize,        // Passed as a native number Int
-                compressedSize: Math.round(result.bytes), // Passed as a native number Int
+                // result.bytes is the ORIGINAL upload; the optimized rendition is in eager[0]
+                compressedSize: Math.round(result.eager?.[0]?.bytes ?? result.bytes),
                 duration: result.duration || 0,
             }
         })
@@ -92,8 +100,6 @@ const result = await new Promise<CloudinaryUploadResult>(
     } catch (error) {
         console.log("UPload video failed", error)
         return NextResponse.json({error: "UPload video failed"}, {status: 500})
-    } finally{
-        await prisma.$disconnect()
     }
 }
 

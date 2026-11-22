@@ -38,7 +38,7 @@ function VideoUpload() {
 
       if (response.status === 200 || response.status === 201) {
         alert("Video uploaded successfully!");
-        router.push("/");
+        router.push("/home");
       } else {
         alert("Upload failed. Please try again.");
       }

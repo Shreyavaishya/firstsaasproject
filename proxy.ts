@@ -8,10 +8,6 @@ const isPublicPageRoute = createRouteMatcher([
     "/sign-up(.*)",
 ]);
 
-const isPublicApiRoute = createRouteMatcher([
-    "/api/videos"
-]);
-
 export default clerkMiddleware(async (auth, req) => {
     const { userId } = await auth();
     const currentUrl = new URL(req.url);
@@ -26,7 +22,7 @@ export default clerkMiddleware(async (auth, req) => {
     // Case 2: User is NOT logged in
     if (!userId) {
         // If it's a protected API route, DO NOT redirect to a UI page. Return 401.
-        if (isApiRequest && !isPublicApiRoute(req)) {
+        if (isApiRequest) {
             return new NextResponse(
                 JSON.stringify({ success: false, message: "Authentication required" }),
                 { status: 401, headers: { 'content-type': 'application/json' } }

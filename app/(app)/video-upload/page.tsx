@@ -1,50 +1,101 @@
 "use client";
 
 import React, { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Upload, Video, FileVideo, Sparkles } from "lucide-react";
+
+type SignData = {
+  signature: string;
+  timestamp: number;
+  folder: string;
+  eager: string;
+  apiKey: string;
+  cloudName: string;
+};
+
+function uploadToCloudinary(
+  file: File,
+  sign: SignData,
+  onProgress: (percent: number) => void
+) {
+  return new Promise<{ public_id: string }>((resolve, reject) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("api_key", sign.apiKey);
+    fd.append("timestamp", String(sign.timestamp));
+    fd.append("signature", sign.signature);
+    fd.append("folder", sign.folder);
+    fd.append("eager", sign.eager);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${sign.cloudName}/video/upload`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const body = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) resolve(body);
+        else reject(new Error(body?.error?.message || "Upload failed"));
+      } catch {
+        reject(new Error("Upload failed"));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.send(fd);
+  });
+}
 
 function VideoUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const router = useRouter();
 
-  // max file size of 70 MB
-  const MAX_FILE_SIZE = 70 * 1024 * 1024;
+  // Cloudinary free plan: 40 MB video transformation limit
+  const MAX_FILE_SIZE = 40 * 1024 * 1024;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
+    setErrorMsg(null);
 
     if (file.size > MAX_FILE_SIZE) {
-      alert("File size too large. Max allowed size is 70 MB.");
+      setErrorMsg("File is too large. Maximum allowed size is 40 MB.");
       return;
     }
 
     setIsUploading(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("originalSize", file.size.toString());
+    setProgress(0);
 
     try {
-      const response = await axios.post("/api/video-upload", formData);
+      // 1. Ask our server for a signature
+      const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
+      if (!signRes.ok) throw new Error("Could not start the upload. Please sign in again.");
+      const sign: SignData = await signRes.json();
 
-      if (response.status === 200 || response.status === 201) {
-        alert("Video uploaded successfully!");
-        router.push("/home");
-      } else {
-        alert("Upload failed. Please try again.");
+      // 2. Upload straight to Cloudinary, with progress
+      const uploaded = await uploadToCloudinary(file, sign, setProgress);
+
+      // 3. Save the record on our server
+      const saveRes = await fetch("/api/video-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicId: uploaded.public_id, title, description }),
+      });
+      if (!saveRes.ok) {
+        const body = await saveRes.json().catch(() => null);
+        throw new Error(body?.error || "Could not save the video.");
       }
+
+      router.push("/home");
     } catch (error) {
       console.log(error);
-      alert("Something went wrong while uploading the video.");
+      setErrorMsg(error instanceof Error ? error.message : "Something went wrong while uploading.");
     } finally {
       setIsUploading(false);
     }
@@ -131,7 +182,7 @@ function VideoUpload() {
                     Click to choose a video
                   </p>
                   <p className="mt-2 text-sm opacity-60">
-                    MP4, MOV, AVI supported • Max size 70 MB
+                    MP4, MOV, AVI supported • Max size 40 MB
                   </p>
 
                   <input
@@ -163,6 +214,21 @@ function VideoUpload() {
                 )}
               </div>
             </div>
+
+            {isUploading && (
+              <div>
+                <progress className="progress progress-primary w-full" value={progress} max={100}></progress>
+                <p className="mt-2 text-sm opacity-60">
+                  {progress < 100 ? `Uploading… ${progress}%` : "Optimizing your video…"}
+                </p>
+              </div>
+            )}
+
+            {errorMsg && (
+              <div className="alert alert-error text-sm">
+                <span>{errorMsg}</span>
+              </div>
+            )}
 
             {/* Dynamic Button utilizing DaisyUI classes */}
             <button

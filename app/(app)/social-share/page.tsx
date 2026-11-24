@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { CldImage } from "next-cloudinary";
+import { CldImage, getCldImageUrl } from "next-cloudinary";
+import { uploadToCloudinary, SignData } from "@/lib/cloudinaryUpload";
 import { ImageIcon, Upload, Download, Sparkles, Crop } from "lucide-react";
 
 const socialFormats = {
@@ -39,6 +40,9 @@ export default function SocialShare() {
   const [selectedFormat, setSelectedFormat] =
     useState<SocialFormat>("Instagram Square (1:1)");
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -48,49 +52,110 @@ export default function SocialShare() {
     }
   }, [selectedFormat, uploadedImage]);
 
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // Cloudinary free plan: 10 MB per image
+
+  // Opening an image from the library: /social-share?img=<id>
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("img");
+    if (!id) return;
+    fetch("/api/images")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => {
+        const found = Array.isArray(list)
+          ? list.find((i: { id: string; publicId: string }) => i.id === id)
+          : null;
+        if (found) setUploadedImage(found.publicId);
+      })
+      .catch(() => {});
+  }, []);
+
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
+    event.target.value = ""; // lets the same file be chosen again
     if (!file) return;
+    setErrorMsg(null);
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("Please choose an image file.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      setErrorMsg("Image is too large. Maximum allowed size is 10 MB.");
+      return;
+    }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    setProgress(0);
 
     try {
-      const response = await fetch("/api/image-upload", {
+      // 1. Ask our server for a signature
+      const signRes = await fetch("/api/cloudinary-sign", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "image" }),
       });
+      if (!signRes.ok) throw new Error("Could not start the upload. Please sign in again.");
+      const sign: SignData = await signRes.json();
 
-      if (!response.ok) throw new Error("Failed to upload image");
+      // 2. Upload straight to Cloudinary, with progress
+      const uploaded = await uploadToCloudinary(file, sign, setProgress);
 
-      const data = await response.json();
+      // 3. Save it to the user's library
+      const saveRes = await fetch("/api/image-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          publicId: uploaded.public_id,
+          title: file.name.replace(/\.[^.]+$/, ""),
+        }),
+      });
+      if (!saveRes.ok) {
+        const body = await saveRes.json().catch(() => null);
+        throw new Error(body?.error || "Could not save the image.");
+      }
+
+      const data = await saveRes.json();
       setUploadedImage(data.publicId);
     } catch (error) {
       console.log(error);
-      alert("Failed to upload image");
+      setErrorMsg(error instanceof Error ? error.message : "Failed to upload image");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleDownload = () => {
-    if (!imageRef.current) return;
-
-    fetch(imageRef.current.src)
-      .then((response) => response.blob())
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${selectedFormat.replace(/\s+/g, "_").toLowerCase()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+  // Downloads the exact resolution of the selected format (not the on-screen preview size)
+  const handleDownload = async () => {
+    if (!uploadedImage) return;
+    setIsDownloading(true);
+    try {
+      const f = socialFormats[selectedFormat];
+      const url = getCldImageUrl({
+        src: uploadedImage,
+        width: f.width,
+        height: f.height,
+        crop: "fill",
+        gravity: "auto",
+        format: "jpg",
+        quality: "auto",
       });
+      const blob = await (await fetch(url)).blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${selectedFormat.replace(/\s+/g, "_").toLowerCase()}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.log(error);
+      setErrorMsg("Download failed. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -139,7 +204,7 @@ export default function SocialShare() {
                   Click to choose an image
                 </p>
                 <p className="mt-2 text-sm opacity-60">
-                  JPG, PNG, WEBP supported
+                  JPG, PNG, WEBP • Max 10 MB
                 </p>
 
                 <input
@@ -154,9 +219,20 @@ export default function SocialShare() {
             {isUploading && (
               <div className="mt-6">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-base-300">
-                  <div className="h-full animate-pulse rounded-full bg-gradient-to-r from-primary to-secondary" />
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
-                <p className="mt-2 text-sm opacity-60">Uploading image...</p>
+                <p className="mt-2 text-sm opacity-60">
+                  {progress < 100 ? `Uploading… ${progress}%` : "Saving to your library…"}
+                </p>
+              </div>
+            )}
+
+            {errorMsg && (
+              <div className="alert alert-error mt-6 text-sm">
+                <span>{errorMsg}</span>
               </div>
             )}
           </div>
@@ -212,6 +288,7 @@ export default function SocialShare() {
                 <button
                   className="btn btn-primary mt-6 flex w-full items-center justify-center gap-2 rounded-xl text-white shadow-lg transition hover:scale-[1.01]"
                   onClick={handleDownload}
+                  disabled={isDownloading}
                 >
                   <Download className="h-5 w-5" />
                   Download for {selectedFormat}

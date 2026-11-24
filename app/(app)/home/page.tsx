@@ -4,32 +4,41 @@ import axios from 'axios'
 import Link from 'next/link'
 import { UserButton } from "@clerk/nextjs"
 import VideoCard from '@/components/VideoCard'
+import ImageCard from '@/components/ImageCard'
 import { Video } from '@/types/index'
+import { Image as ImageRecord } from '@prisma/client'
+
+type Tab = "videos" | "images"
 
 function Home() {
     const [videos, setVideos] = useState<Video[]>([])
+    const [images, setImages] = useState<ImageRecord[]>([])
+    const [tab, setTab] = useState<Tab>("videos")
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    const fetchVideos = useCallback(async () => {
+    const fetchLibrary = useCallback(async () => {
         try {
-            const response = await axios.get("/api/videos")
-            if (Array.isArray(response.data)) {
-                setVideos(response.data)
-            } else {
+            const [videoRes, imageRes] = await Promise.all([
+                axios.get("/api/videos"),
+                axios.get("/api/images"),
+            ])
+            if (!Array.isArray(videoRes.data) || !Array.isArray(imageRes.data)) {
                 throw new Error("Unexpected response format")
             }
+            setVideos(videoRes.data)
+            setImages(imageRes.data)
         } catch (err) {
             console.error(err)
-            setError("Failed to fetch videos")
+            setError("Failed to load your library")
         } finally {
             setLoading(false)
         }
     }, [])
 
     useEffect(() => {
-        fetchVideos()
-    }, [fetchVideos])
+        fetchLibrary()
+    }, [fetchLibrary])
 
     const handleDownload = useCallback((url: string, title: string) => {
         const link = document.createElement("a");
@@ -41,7 +50,7 @@ function Home() {
         document.body.removeChild(link);
     }, [])
 
-    const handleDelete = useCallback(async (id: string) => {
+    const handleDeleteVideo = useCallback(async (id: string) => {
         setError(null)
         try {
             await axios.delete(`/api/videos/${id}`)
@@ -53,7 +62,7 @@ function Home() {
         }
     }, [])
 
-    const handleRename = useCallback(async (id: string, title: string, description: string) => {
+    const handleRenameVideo = useCallback(async (id: string, title: string, description: string) => {
         setError(null)
         try {
             const res = await axios.patch(`/api/videos/${id}`, { title, description })
@@ -61,6 +70,18 @@ function Home() {
         } catch (err) {
             console.error(err)
             setError("Could not save your changes. Please try again.")
+            throw err
+        }
+    }, [])
+
+    const handleDeleteImage = useCallback(async (id: string) => {
+        setError(null)
+        try {
+            await axios.delete(`/api/images/${id}`)
+            setImages((prev) => prev.filter((i) => i.id !== id))
+        } catch (err) {
+            console.error(err)
+            setError("Could not delete the image. Please try again.")
             throw err
         }
     }, [])
@@ -77,7 +98,7 @@ function Home() {
 
     return (
         <div className="min-h-screen bg-base-100 text-base-content p-8 transition-colors duration-200">
-            
+
             {/* 🔹 Top Header Area */}
             <header className="flex justify-between items-center border-b border-base-300 pb-4 mb-8">
                 <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -88,46 +109,69 @@ function Home() {
                 </div>
             </header>
 
-            {/* 🔹 Action Bar Section */}
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold tracking-tight">Videos</h2>
-                
-                {/* 🚀 Dynamic DaisyUI Context Button */}
-                <Link 
-                    href="/video-upload" 
+            {/* 🔹 Tabs + action */}
+            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+                <div role="tablist" className="tabs tabs-box">
+                    <button
+                        role="tab"
+                        className={`tab ${tab === "videos" ? "tab-active" : ""}`}
+                        onClick={() => setTab("videos")}
+                    >
+                        Videos ({videos.length})
+                    </button>
+                    <button
+                        role="tab"
+                        className={`tab ${tab === "images" ? "tab-active" : ""}`}
+                        onClick={() => setTab("images")}
+                    >
+                        Images ({images.length})
+                    </button>
+                </div>
+
+                <Link
+                    href={tab === "videos" ? "/video-upload" : "/social-share"}
                     className="btn btn-primary shadow-lg shadow-primary/20 flex items-center gap-2 normal-case text-sm"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 12 12M12 3v13.5" />
-                    </svg>
-                    Upload Video
+                    {tab === "videos" ? "Upload Video" : "New Image"}
                 </Link>
             </div>
 
             {/* 🔹 Adaptive Alert View */}
             {error && (
                 <div className="alert alert-error mb-6 shadow-md border border-error/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     <span>{error}</span>
                 </div>
             )}
 
-            {/* 🔹 Videos Display Grid Logic */}
-            {videos.length === 0 ? (
+            {/* 🔹 Library grids */}
+            {tab === "videos" ? (
+                videos.length === 0 ? (
+                    <div className="border border-dashed border-base-300 bg-base-200/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
+                        <p className="text-base-content/60 text-lg font-medium mb-1">No videos yet</p>
+                        <p className="text-base-content/40 text-sm">Click Upload Video to add your first one.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {videos.map((video) => (
+                            <VideoCard
+                                key={video.id}
+                                video={video}
+                                onDownload={handleDownload}
+                                onDelete={handleDeleteVideo}
+                                onRename={handleRenameVideo}
+                            />
+                        ))}
+                    </div>
+                )
+            ) : images.length === 0 ? (
                 <div className="border border-dashed border-base-300 bg-base-200/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
-                    <p className="text-base-content/60 text-lg font-medium mb-1">No videos available</p>
-                    <p className="text-base-content/40 text-sm">Click the upload button above to add your first media asset.</p>
+                    <p className="text-base-content/60 text-lg font-medium mb-1">No images yet</p>
+                    <p className="text-base-content/40 text-sm">Upload one in Social Studio and it will be saved here.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map((video) => (
-                        <VideoCard
-                            key={video.id}
-                            video={video}
-                            onDownload={handleDownload}
-                            onDelete={handleDelete}
-                            onRename={handleRename}
-                        />
+                    {images.map((image) => (
+                        <ImageCard key={image.id} image={image} onDelete={handleDeleteImage} />
                     ))}
                 </div>
             )}

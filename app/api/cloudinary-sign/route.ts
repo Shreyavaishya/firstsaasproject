@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { auth } from "@clerk/nextjs/server";
 
@@ -10,7 +10,7 @@ cloudinary.config({
 
 // Gives a logged-in user a short-lived signature so the browser can upload
 // straight to Cloudinary (the file never passes through Vercel).
-export async function POST() {
+export async function POST(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,14 +23,17 @@ export async function POST() {
         return NextResponse.json({ error: "Cloudinary credentials not found" }, { status: 500 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const kind: "image" | "video" = body?.kind === "image" ? "image" : "video";
+
     const timestamp = Math.round(Date.now() / 1000);
-    const folder = `video-uploads/${userId}`; // per-user folder = ownership proof
-    const eager = "q_auto,f_mp4";
+    const folder = `${kind}-uploads/${userId}`; // per-user folder = ownership proof
+    const eager = kind === "video" ? "q_auto,f_mp4" : undefined;
 
-    const signature = cloudinary.utils.api_sign_request(
-        { timestamp, folder, eager },
-        apiSecret
-    );
+    const params: Record<string, string | number> = { timestamp, folder };
+    if (eager) params.eager = eager;
 
-    return NextResponse.json({ signature, timestamp, folder, eager, apiKey, cloudName });
+    const signature = cloudinary.utils.api_sign_request(params, apiSecret);
+
+    return NextResponse.json({ signature, timestamp, folder, eager, apiKey, cloudName, resourceType: kind });
 }

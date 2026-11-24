@@ -20,3 +20,18 @@ model Video {
 
   @@index([userId, createdAt])
 }
+
+
+model Image {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  publicId     String
+  originalSize Int
+  width        Int
+  height       Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}

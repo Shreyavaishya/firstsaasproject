@@ -18,7 +18,7 @@ function uploadToCloudinary(
   sign: SignData,
   onProgress: (percent: number) => void
 ) {
-  return new Promise<{ public_id: string }>((resolve, reject) => {
+  return new Promise<{ public_id: string; duration?: number }>((resolve, reject) => {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("api_key", sign.apiKey);
@@ -85,7 +85,7 @@ function VideoUpload() {
       const saveRes = await fetch("/api/video-upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ publicId: uploaded.public_id, title, description }),
+        body: JSON.stringify({ publicId: uploaded.public_id, title, description, duration: uploaded.duration }),
       });
       if (!saveRes.ok) {
         const body = await saveRes.json().catch(() => null);

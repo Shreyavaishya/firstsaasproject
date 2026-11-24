@@ -41,6 +41,30 @@ function Home() {
         document.body.removeChild(link);
     }, [])
 
+    const handleDelete = useCallback(async (id: string) => {
+        setError(null)
+        try {
+            await axios.delete(`/api/videos/${id}`)
+            setVideos((prev) => prev.filter((v) => v.id !== id))
+        } catch (err) {
+            console.error(err)
+            setError("Could not delete the video. Please try again.")
+            throw err
+        }
+    }, [])
+
+    const handleRename = useCallback(async (id: string, title: string, description: string) => {
+        setError(null)
+        try {
+            const res = await axios.patch(`/api/videos/${id}`, { title, description })
+            setVideos((prev) => prev.map((v) => (v.id === id ? res.data : v)))
+        } catch (err) {
+            console.error(err)
+            setError("Could not save your changes. Please try again.")
+            throw err
+        }
+    }, [])
+
     // 🔹 Adaptive Theme Spinner Loader
     if (loading) {
         return (
@@ -101,6 +125,8 @@ function Home() {
                             key={video.id}
                             video={video}
                             onDownload={handleDownload}
+                            onDelete={handleDelete}
+                            onRename={handleRename}
                         />
                     ))}
                 </div>

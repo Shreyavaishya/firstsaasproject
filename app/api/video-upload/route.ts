@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized. Please sign in first." }, { status: 401 });
         }
 
-        const { publicId, title, description } = await request.json();
+        const { publicId, title, description, duration: clientDuration } = await request.json();
 
         if (typeof publicId !== "string" || !publicId.startsWith(`video-uploads/${userId}/`)) {
             return NextResponse.json({ error: "Invalid upload" }, { status: 400 });
@@ -36,18 +36,24 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Video is larger than the 40 MB limit" }, { status: 413 });
         }
 
+        // Cloudinary's lookup may omit duration; fall back to what the upload response said
+        const fallbackDuration =
+            typeof clientDuration === "number" && isFinite(clientDuration) && clientDuration > 0 && clientDuration < 86400
+                ? clientDuration
+                : 0;
+
         const compressedBytes = asset.derived?.[0]?.bytes ?? asset.bytes;
 
         const prisma = getPrisma();
         const video = await prisma.video.create({
             data: {
                 userId,
-                title: title.trim(),
-                description: typeof description === "string" && description.trim() ? description.trim() : null,
+                title: title.trim().slice(0, 100),
+                description: typeof description === "string" && description.trim() ? description.trim().slice(0, 500) : null,
                 publicId,
                 originalSize: Math.round(asset.bytes),
                 compressedSize: Math.round(compressedBytes),
-                duration: asset.duration || 0,
+                duration: asset.duration || fallbackDuration,
             },
         });
 

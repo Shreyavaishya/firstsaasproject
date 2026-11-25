@@ -5,5 +5,5 @@ export const LIMITS = {
     maxVideoBytes: 40 * 1024 * 1024, // 40 MB (Cloudinary video transformation limit)
     maxImagePixels: 25_000_000, // 25 megapixels
     exportsPerMonth: 10, // one upload = one export, however many formats it produces
-    storageBytes: 300 * 1024 * 1024, // 300 MB per user
+    storageBytes: 300 * 1000 * 1000, // 300 MB per user
 }

@@ -13,6 +13,11 @@ export default clerkMiddleware(async (auth, req) => {
     const currentUrl = new URL(req.url);
     const isApiRequest = currentUrl.pathname.startsWith("/api");
 
+    // Cron jobs have no Clerk session; the route itself checks CRON_SECRET
+    if (currentUrl.pathname.startsWith("/api/cron/")) {
+        return NextResponse.next();
+    }
+
     // Case 1: Logged-in user trying to access landing, sign-in, or sign-up pages
     // Redirect them straight to their dashboard (/home)
     if (userId && isPublicPageRoute(req)) {

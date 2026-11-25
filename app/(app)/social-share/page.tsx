@@ -96,7 +96,10 @@ export default function SocialShare() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kind: "image" }),
       });
-      if (!signRes.ok) throw new Error("Could not start the upload. Please sign in again.");
+      if (!signRes.ok) {
+        const body = await signRes.json().catch(() => null);
+        throw new Error(body?.error || "Could not start the upload. Please sign in again.");
+      }
       const sign: SignData = await signRes.json();
 
       // 2. Upload straight to Cloudinary, with progress

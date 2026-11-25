@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { UserButton } from "@clerk/nextjs"
 import VideoCard from '@/components/VideoCard'
 import ImageCard from '@/components/ImageCard'
+import UsageMeter from '@/components/UsageMeter'
 import { Video } from '@/types/index'
 import { Image as ImageRecord } from '@prisma/client'
 
@@ -16,6 +17,7 @@ function Home() {
     const [tab, setTab] = useState<Tab>("videos")
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [usageKey, setUsageKey] = useState(0)
 
     const fetchLibrary = useCallback(async () => {
         try {
@@ -55,6 +57,7 @@ function Home() {
         try {
             await axios.delete(`/api/videos/${id}`)
             setVideos((prev) => prev.filter((v) => v.id !== id))
+            setUsageKey((k) => k + 1)
         } catch (err) {
             console.error(err)
             setError("Could not delete the video. Please try again.")
@@ -79,6 +82,7 @@ function Home() {
         try {
             await axios.delete(`/api/images/${id}`)
             setImages((prev) => prev.filter((i) => i.id !== id))
+            setUsageKey((k) => k + 1)
         } catch (err) {
             console.error(err)
             setError("Could not delete the image. Please try again.")
@@ -108,6 +112,8 @@ function Home() {
                     <UserButton />
                 </div>
             </header>
+
+            <UsageMeter refreshKey={usageKey} />
 
             {/* 🔹 Tabs + action */}
             <div className="flex flex-wrap justify-between items-center gap-4 mb-6">

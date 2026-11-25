@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { auth } from "@clerk/nextjs/server";
 import { getPrisma } from "@/lib/db";
+import { LIMITS } from "@/lib/limits";
+import { getUsage, blockReason, recordExport } from "@/lib/usage";
 
 cloudinary.config({
     cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -9,11 +11,8 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // Cloudinary free plan: 10 MB per image
-const MAX_PIXELS = 25_000_000; // Cloudinary free plan: 25 megapixels
-
 // The browser has already uploaded the image to Cloudinary.
-// Verify it belongs to this user and is within limits, then save a record.
+// Verify it belongs to this user, enforce the plan limits, then save a record.
 export async function POST(req: NextRequest) {
     try {
         const { userId } = await auth();
@@ -26,30 +25,44 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid upload" }, { status: 400 });
         }
 
+        const reject = async (message: string, status: number) => {
+            await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+            return NextResponse.json({ error: message }, { status });
+        };
+
         const asset = await cloudinary.api.resource(publicId, { resource_type: "image" });
 
-        if (asset.bytes > MAX_IMAGE_BYTES) {
-            await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
-            return NextResponse.json({ error: "Image is larger than the 10 MB limit" }, { status: 413 });
+        if (asset.bytes > LIMITS.maxImageBytes) {
+            return reject("Image is larger than the 10 MB limit", 413);
         }
-        if (asset.width * asset.height > MAX_PIXELS) {
-            await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
-            return NextResponse.json({ error: "Image is larger than 25 megapixels" }, { status: 413 });
+        if (asset.width * asset.height > LIMITS.maxImagePixels) {
+            return reject("Image is larger than 25 megapixels", 413);
+        }
+
+        const prisma = getPrisma();
+
+        // Plan limits (a signature can be reused, so this check is the real gate)
+        const usage = await getUsage(prisma, userId);
+        const reason = blockReason(usage, asset.bytes);
+        if (reason) {
+            return reject(reason, 403);
         }
 
         const safeTitle = (typeof title === "string" && title.trim() ? title.trim() : "Untitled").slice(0, 100);
 
-        const prisma = getPrisma();
-        const image = await prisma.image.create({
-            data: {
-                userId,
-                title: safeTitle,
-                publicId,
-                originalSize: Math.round(asset.bytes),
-                width: Math.round(asset.width),
-                height: Math.round(asset.height),
-            },
-        });
+        const [image] = await prisma.$transaction([
+            prisma.image.create({
+                data: {
+                    userId,
+                    title: safeTitle,
+                    publicId,
+                    originalSize: Math.round(asset.bytes),
+                    width: Math.round(asset.width),
+                    height: Math.round(asset.height),
+                },
+            }),
+            recordExport(prisma, userId),
+        ]);
 
         return NextResponse.json(image);
     } catch (error) {

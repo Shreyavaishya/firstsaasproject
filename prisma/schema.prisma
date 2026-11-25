@@ -21,7 +21,6 @@ model Video {
   @@index([userId, createdAt])
 }
 
-
 model Image {
   id           String   @id @default(cuid())
   userId       String
@@ -34,4 +33,14 @@ model Image {
   updatedAt    DateTime @updatedAt
 
   @@index([userId, createdAt])
+}
+
+
+model Usage {
+  id      String @id @default(cuid())
+  userId  String
+  month   String // "2026-11" (UTC)
+  exports Int    @default(0)
+
+  @@unique([userId, month])
 }

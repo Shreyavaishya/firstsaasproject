@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { auth } from "@clerk/nextjs/server";
+import { getPrisma } from "@/lib/db";
+import { getUsage, blockReason } from "@/lib/usage";
 
 cloudinary.config({
     cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -21,6 +23,13 @@ export async function POST(req: NextRequest) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     if (!cloudName || !apiKey || !apiSecret) {
         return NextResponse.json({ error: "Cloudinary credentials not found" }, { status: 500 });
+    }
+
+    // Stop users who are over their limits before they upload anything
+    const usage = await getUsage(getPrisma(), userId);
+    const reason = blockReason(usage);
+    if (reason) {
+        return NextResponse.json({ error: reason }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));

@@ -75,7 +75,10 @@ function VideoUpload() {
     try {
       // 1. Ask our server for a signature
       const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
-      if (!signRes.ok) throw new Error("Could not start the upload. Please sign in again.");
+      if (!signRes.ok) {
+        const body = await signRes.json().catch(() => null);
+        throw new Error(body?.error || "Could not start the upload. Please sign in again.");
+      }
       const sign: SignData = await signRes.json();
 
       // 2. Upload straight to Cloudinary, with progress

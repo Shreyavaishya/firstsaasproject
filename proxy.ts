@@ -18,6 +18,11 @@ export default clerkMiddleware(async (auth, req) => {
         return NextResponse.next();
     }
 
+    // Legal pages are readable by everyone, signed in or not
+    if (currentUrl.pathname === "/privacy" || currentUrl.pathname === "/terms") {
+        return NextResponse.next();
+    }
+
     // Case 1: Logged-in user trying to access landing, sign-in, or sign-up pages
     // Redirect them straight to their dashboard (/home)
     if (userId && isPublicPageRoute(req)) {

@@ -8,11 +8,11 @@ const free = [
   "Videos up to 40 MB",
   "300 MB of storage",
   "Saved library with delete and rename",
+  "Download every size at once (.zip)",
 ];
 const pro = [
   "Higher monthly exports",
   "Larger files and more storage",
-  "All sizes in one download",
   "More features based on your feedback",
 ];
 

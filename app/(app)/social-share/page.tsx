@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { CldImage, getCldImageUrl } from "next-cloudinary";
 import { uploadToCloudinary, SignData } from "@/lib/cloudinaryUpload";
+import { makeZip } from "@/lib/zip";
 import { ImageIcon, Upload, Download, Sparkles, Crop } from "lucide-react";
 
 const socialFormats = {
@@ -15,6 +16,16 @@ const socialFormats = {
     width: 1080,
     height: 1350,
     aspectRatio: "4:5",
+  },
+  "Reels / Stories (9:16)": {
+    width: 1080,
+    height: 1920,
+    aspectRatio: "9:16",
+  },
+  "YouTube Thumbnail (16:9)": {
+    width: 1280,
+    height: 720,
+    aspectRatio: "16:9",
   },
   "Twitter Post (16:9)": {
     width: 1200,
@@ -43,6 +54,7 @@ export default function SocialShare() {
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isZipping, setIsZipping] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -158,6 +170,49 @@ export default function SocialShare() {
       setErrorMsg("Download failed. Please try again.");
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  // Builds every format and downloads them together as one .zip
+  const handleDownloadAll = async () => {
+    if (!uploadedImage) return;
+    setIsZipping(true);
+    setErrorMsg(null);
+    try {
+      const files = await Promise.all(
+        (Object.keys(socialFormats) as SocialFormat[]).map(async (name) => {
+          const f = socialFormats[name];
+          const url = getCldImageUrl({
+            src: uploadedImage,
+            width: f.width,
+            height: f.height,
+            crop: "fill",
+            gravity: "auto",
+            format: "jpg",
+            quality: "auto",
+          });
+          const res = await fetch(url);
+          if (!res.ok) throw new Error("Could not fetch " + name);
+          const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+          return {
+            name: `${slug}_${f.width}x${f.height}.jpg`,
+            data: new Uint8Array(await res.arrayBuffer()),
+          };
+        })
+      );
+      const blobUrl = URL.createObjectURL(makeZip(files));
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = "pixora-all-sizes.zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.log(error);
+      setErrorMsg("Could not build the zip. Please try again.");
+    } finally {
+      setIsZipping(false);
     }
   };
 
@@ -295,6 +350,14 @@ export default function SocialShare() {
                 >
                   <Download className="h-5 w-5" />
                   Download for {selectedFormat}
+                </button>
+                <button
+                  className="btn btn-outline w-full gap-2 rounded-xl"
+                  onClick={handleDownloadAll}
+                  disabled={isZipping || isDownloading}
+                >
+                  <Download className="h-5 w-5" />
+                  {isZipping ? "Building your zip…" : `Download all ${Object.keys(socialFormats).length} sizes (.zip)`}
                 </button>
               </div>
 

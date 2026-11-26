@@ -1,7 +1,7 @@
 const steps = [
   { n: "1", title: "Add your photo or video", text: "Images up to 10 MB and videos up to 40 MB on the free plan." },
   { n: "2", title: "Pick the platform", text: "Instagram, Reels and Stories, YouTube, X and more, cropped around your subject." },
-  { n: "3", title: "Download and post", text: "Get the exact size each platform wants. Videos come out smaller, with the saving shown." },
+  { n: "3", title: "Download and post", text: "Get the exact size each platform wants, or grab every size in one zip. Videos come out smaller, with the saving shown." },
 ];
 
 export default function HowItWorks() {

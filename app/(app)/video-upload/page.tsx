@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Video, FileVideo, Sparkles } from "lucide-react";
+import { Upload, Video, FileVideo } from "lucide-react";
 
 type SignData = {
   signature: string;
@@ -105,86 +105,60 @@ function VideoUpload() {
   };
 
   return (
-    // Changed bg-black text-white to dynamic semantic variables
-    <main className="min-h-screen bg-base-100 text-base-content relative">
-      {/* Background glow adapts softly to themes using opacity */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
-      </div>
-
-      <div className="mx-auto max-w-4xl px-6 py-12">
-        {/* Heading */}
-        <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary">
-            <Sparkles className="mr-2 h-4 w-4" />
-            Upload & Manage Your Videos
-          </div>
-
-          <h1 className="text-4xl font-bold md:text-5xl">
-            Upload Your{" "}
-            <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Video Content
-            </span>
-          </h1>
-
-          {/* Muted content description color */}
-          <p className="mx-auto mt-4 max-w-2xl opacity-70">
-            Add your video, title, and description to upload content securely and
-            keep everything organized in one place.
+    <main className="min-h-screen">
+      <div className="mx-auto max-w-3xl px-6 py-8">
+        <header className="mb-6">
+          <h1 className="text-2xl font-semibold tracking-tight">Upload a video</h1>
+          <p className="mt-0.5 text-sm text-base-content/60">
+            Add your video, title, and description. Everything is saved to your library.
           </p>
-        </div>
+        </header>
 
-        {/* Card wrapper uses bg-base-200 for layered depth */}
-        <div className="rounded-3xl border border-base-300 bg-base-200/50 p-8 shadow-xl backdrop-blur-xl">
+        <div className="rounded-2xl border border-base-300 bg-base-100 p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
-              <label className="mb-2 block text-sm font-medium opacity-80">
+              <label htmlFor="video-title" className="mb-1.5 block text-sm font-medium">
                 Video Title
               </label>
-              {/* Using native DaisyUI input styling for flawless theme adaptation */}
               <input
+                id="video-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter video title"
-                className="input input-bordered w-full rounded-xl bg-base-100 px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="input w-full"
                 required
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="mb-2 block text-sm font-medium opacity-80">
+              <label htmlFor="video-description" className="mb-1.5 block text-sm font-medium">
                 Description
               </label>
-              {/* Using native DaisyUI textarea styling */}
               <textarea
+                id="video-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Write a short description about your video"
                 rows={5}
-                className="textarea textarea-bordered w-full rounded-xl bg-base-100 px-4 py-3 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                className="textarea w-full"
               />
             </div>
 
             {/* File Upload */}
             <div>
-              <label className="mb-3 block text-sm font-medium opacity-80">
-                Video File
-              </label>
+              <p className="mb-1.5 text-sm font-medium">Video File</p>
 
-              <div className="rounded-2xl border border-dashed border-primary/30 bg-base-100/60 p-6 transition hover:border-primary">
+              <div className="rounded-xl border border-dashed border-base-content/20 p-6 transition-colors hover:border-primary/60">
                 <label className="flex cursor-pointer flex-col items-center justify-center text-center">
-                  <div className="mb-4 rounded-2xl bg-primary/10 p-4">
-                    <Upload className="h-8 w-8 text-primary" />
-                  </div>
+                  <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Upload className="h-5 w-5" />
+                  </span>
 
-                  <p className="text-lg font-medium">
-                    Click to choose a video
-                  </p>
-                  <p className="mt-2 text-sm opacity-60">
+                  <p className="text-base font-medium">Click to choose a video</p>
+                  <p className="mt-1 text-sm text-base-content/60">
                     MP4, MOV, AVI supported • Max size 40 MB
                   </p>
 
@@ -197,21 +171,17 @@ function VideoUpload() {
                   />
                 </label>
 
-                {/* Selected file preview */}
+                {/* Selected file */}
                 {file && (
-                  <div className="mt-6 rounded-2xl border border-base-300 bg-base-200 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-secondary/10 p-3">
-                        <FileVideo className="h-6 w-6 text-secondary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">
-                          {file.name}
-                        </p>
-                        <p className="text-sm opacity-60">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
-                      </div>
+                  <div className="mt-5 flex items-center gap-3 rounded-xl border border-base-300 bg-base-200 p-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-base-100 text-base-content/70">
+                      <FileVideo className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{file.name}</p>
+                      <p className="text-xs text-base-content/60 tabular-nums">
+                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
                     </div>
                   </div>
                 )}
@@ -220,8 +190,8 @@ function VideoUpload() {
 
             {isUploading && (
               <div>
-                <progress className="progress progress-primary w-full" value={progress} max={100}></progress>
-                <p className="mt-2 text-sm opacity-60">
+                <progress className="progress progress-primary h-1.5 w-full" value={progress} max={100}></progress>
+                <p className="mt-2 text-sm text-base-content/60">
                   {progress < 100 ? `Uploading… ${progress}%` : "Optimizing your video…"}
                 </p>
               </div>
@@ -233,11 +203,10 @@ function VideoUpload() {
               </div>
             )}
 
-            {/* Dynamic Button utilizing DaisyUI classes */}
             <button
               type="submit"
               disabled={isUploading}
-              className="btn btn-primary w-full gap-2 rounded-xl text-white shadow-lg transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
+              className="btn btn-neutral w-full gap-2 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isUploading ? (
                 <>

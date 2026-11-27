@@ -10,16 +10,17 @@ type Usage = {
     resetsOn: string
 }
 
-function Bar({ label, text, value, max }: { label: string; text: string; value: number; max: number }) {
-    const pct = Math.min(100, Math.round((value / max) * 100))
+// One figure: small muted label, big number, muted "of limit", and a thin bar underneath
+function Stat({ label, value, of, pct }: { label: string; value: string; of: string; pct: number }) {
     const color = pct >= 100 ? "progress-error" : pct >= 80 ? "progress-warning" : "progress-primary"
     return (
-        <div>
-            <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium">{label}</span>
-                <span className="opacity-70">{text}</span>
-            </div>
-            <progress className={`progress ${color} w-full`} value={pct} max={100}></progress>
+        <div className="bg-base-100 px-5 py-4">
+            <p className="text-xs text-base-content/60">{label}</p>
+            <p className="mt-1 flex items-baseline gap-1.5">
+                <span className="text-2xl font-semibold tracking-tight tabular-nums">{value}</span>
+                <span className="text-sm text-base-content/60 tabular-nums">of {of}</span>
+            </p>
+            <progress className={`progress ${color} mt-3 h-1.5 w-full`} value={pct} max={100}></progress>
         </div>
     )
 }
@@ -42,23 +43,25 @@ export default function UsageMeter({ refreshKey = 0 }: { refreshKey?: number }) 
         timeZone: "UTC",
     })
 
+    const pct = (value: number, max: number) => Math.min(100, Math.round((value / max) * 100))
+
     return (
-        <div className="mb-6 rounded-2xl border border-base-300 bg-base-200/40 p-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-                <Bar
+        <div className="mb-6">
+            <div className="grid gap-px overflow-hidden rounded-2xl border border-base-300 bg-base-300 sm:grid-cols-2">
+                <Stat
                     label="Exports this month"
-                    text={`${usage.exportsUsed} of ${usage.exportsLimit}`}
-                    value={usage.exportsUsed}
-                    max={usage.exportsLimit}
+                    value={String(usage.exportsUsed)}
+                    of={String(usage.exportsLimit)}
+                    pct={pct(usage.exportsUsed, usage.exportsLimit)}
                 />
-                <Bar
+                <Stat
                     label="Storage"
-                    text={`${filesize(usage.storageUsed)} of ${filesize(usage.storageLimit)}`}
-                    value={usage.storageUsed}
-                    max={usage.storageLimit}
+                    value={filesize(usage.storageUsed)}
+                    of={filesize(usage.storageLimit)}
+                    pct={pct(usage.storageUsed, usage.storageLimit)}
                 />
             </div>
-            <p className="mt-3 text-xs opacity-60">
+            <p className="mt-2 text-xs text-base-content/60">
                 Free plan · exports reset on {resets}
             </p>
         </div>

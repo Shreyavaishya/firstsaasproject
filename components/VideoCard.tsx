@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { getCldImageUrl, getCldVideoUrl } from "next-cloudinary"
-import { Download, Clock, FileDown, FileUp, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Download, Clock, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import dayjs from 'dayjs';
 import realtiveTime from "dayjs/plugin/relativeTime"
 import { filesize } from "filesize"
@@ -107,15 +107,15 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDelete, onRe
 
     return (
         <div
-            className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300"
+            className="overflow-hidden rounded-2xl border border-base-300 bg-base-100"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <figure className="aspect-video relative">
+            <figure className="relative aspect-video bg-base-200">
                 {isHovered ? (
                     previewError ? (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                            <p className="text-red-500">Preview not available</p>
+                        <div className="flex h-full w-full items-center justify-center bg-base-200">
+                            <p className="text-sm text-base-content/60">Preview not available</p>
                         </div>
                     ) : (
                         <video
@@ -123,7 +123,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDelete, onRe
                             autoPlay
                             muted
                             loop
-                            className="w-full h-full object-cover"
+                            className="h-full w-full object-cover"
                             onError={() => setPreviewError(true)}
                         />
                     )
@@ -131,26 +131,26 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDelete, onRe
                     <img
                         src={getThumbnailUrl(video.publicId)}
                         alt={video.title}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                     />
                 )}
-                <div className="absolute bottom-2 right-2 bg-base-100 bg-opacity-70 px-2 py-1 rounded-lg text-sm flex items-center">
-                    <Clock size={16} className="mr-1" />
+                <div className="absolute bottom-2 right-2 flex items-center rounded-md bg-base-100/85 px-2 py-1 text-xs font-medium tabular-nums backdrop-blur-sm">
+                    <Clock size={14} className="mr-1" />
                     {formatDuration(video.duration)}
                 </div>
             </figure>
-            <div className="card-body p-4">
+            <div className="p-4">
                 {mode === "edit" ? (
                     <div className="flex flex-col gap-2">
                         <input
-                            className="input input-bordered w-full"
+                            className="input w-full"
                             value={draftTitle}
                             maxLength={100}
                             onChange={(e) => setDraftTitle(e.target.value)}
                             placeholder="Title"
                         />
                         <textarea
-                            className="textarea textarea-bordered w-full"
+                            className="textarea w-full"
                             value={draftDesc}
                             maxLength={500}
                             onChange={(e) => setDraftDesc(e.target.value)}
@@ -160,7 +160,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDelete, onRe
                             <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setMode("view")}>
                                 Cancel
                             </button>
-                            <button className="btn btn-primary btn-sm" disabled={busy || !draftTitle.trim()} onClick={saveEdit}>
+                            <button className="btn btn-neutral btn-sm" disabled={busy || !draftTitle.trim()} onClick={saveEdit}>
                                 {busy ? "Saving…" : "Save"}
                             </button>
                         </div>
@@ -168,12 +168,12 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDelete, onRe
                 ) : (
                     <>
                         <div className="flex items-start justify-between gap-2">
-                            <h2 className="card-title text-lg font-bold break-words">{video.title}</h2>
+                            <h2 className="break-words text-base font-semibold tracking-tight">{video.title}</h2>
                             <div className="dropdown dropdown-end">
                                 <div tabIndex={0} role="button" className="btn btn-ghost btn-xs btn-square" aria-label="More options">
                                     <MoreVertical size={16} />
                                 </div>
-                                <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+                                <ul tabIndex={0} className="dropdown-content menu z-10 w-40 rounded-box border border-base-300 bg-base-100 p-2">
                                     <li>
                                         <button onClick={startEdit}><Pencil size={14} /> Rename</button>
                                     </li>
@@ -189,27 +189,29 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDelete, onRe
                             </div>
                         </div>
                         {video.description && (
-                            <p className="text-sm text-base-content opacity-70">{video.description}</p>
+                            <p className="mt-1 text-sm text-base-content/70">{video.description}</p>
                         )}
-                        <p className="text-sm text-base-content opacity-70 mb-2">
+                        <p className="mt-0.5 text-xs text-base-content/60">
                             Uploaded {dayjs(video.createdAt).fromNow()}
                         </p>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div className="flex items-center">
-                                <FileUp size={18} className="mr-2 text-primary" />
-                                <div>
-                                    <div className="font-semibold">Original</div>
-                                    <div>{formatSize(Number(video.originalSize))}</div>
-                                </div>
+
+                        {/* Before and after, side by side, with the saving as a status pill */}
+                        <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-base-300 bg-base-300 text-sm">
+                            <div className="bg-base-100 px-3 py-2">
+                                <dt className="text-xs text-base-content/60">Original</dt>
+                                <dd className="font-medium tabular-nums">{formatSize(Number(video.originalSize))}</dd>
                             </div>
-                            <div className="flex items-center">
-                                <FileDown size={18} className="mr-2 text-secondary" />
-                                <div>
-                                    <div className="font-semibold">Compressed</div>
-                                    <div>{formatSize(Number(video.compressedSize))}</div>
-                                </div>
+                            <div className="bg-base-100 px-3 py-2">
+                                <dt className="text-xs text-base-content/60">Compressed</dt>
+                                <dd className="flex items-center gap-2 font-medium tabular-nums">
+                                    {formatSize(Number(video.compressedSize))}
+                                    <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-xs font-medium text-success">
+                                        {compressionPercentage}%
+                                    </span>
+                                </dd>
                             </div>
-                        </div>
+                        </dl>
+
                         {mode === "confirmDelete" ? (
                             <div className="mt-4 rounded-lg border border-error/30 bg-error/10 p-3">
                                 <p className="text-sm font-medium">Delete this video? This can&apos;t be undone.</p>
@@ -223,14 +225,11 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDelete, onRe
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex justify-between items-center mt-4">
-                                <div className="text-sm font-semibold">
-                                    Compression:{" "}
-                                    <span className="text-accent">{compressionPercentage}%</span>
-                                </div>
+                            <div className="mt-4 flex items-center justify-end">
                                 <button
-                                    className="btn btn-primary btn-sm"
+                                    className="btn btn-neutral btn-sm"
                                     onClick={() => onDownload(getFullVideoUrl(video.publicId), video.title)}
+                                    aria-label="Download video"
                                 >
                                     <Download size={16} />
                                 </button>

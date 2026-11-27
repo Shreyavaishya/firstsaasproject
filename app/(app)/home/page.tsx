@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
-import { UserButton } from "@clerk/nextjs"
+import { Upload, Image as ImageIcon } from "lucide-react"
 import VideoCard from '@/components/VideoCard'
 import ImageCard from '@/components/ImageCard'
 import UsageMeter from '@/components/UsageMeter'
@@ -90,33 +90,27 @@ function Home() {
         }
     }, [])
 
-    // 🔹 Adaptive Theme Spinner Loader
     if (loading) {
         return (
-            <div className="min-h-screen bg-base-100 flex flex-col items-center justify-center gap-3">
+            <div className="flex min-h-screen flex-col items-center justify-center gap-3">
                 <span className="loading loading-ring loading-lg text-primary"></span>
-                <p className="text-sm opacity-60 font-medium">Loading your Pixora workspace...</p>
+                <p className="text-sm font-medium text-base-content/60">Loading your Pixora workspace...</p>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-base-100 text-base-content p-8 transition-colors duration-200">
+        <div className="mx-auto min-h-screen max-w-6xl px-6 py-8">
 
-            {/* 🔹 Top Header Area */}
-            <header className="flex justify-between items-center border-b border-base-300 pb-4 mb-8">
-                <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    Pixora
-                </h1>
-                <div className="flex items-center gap-4">
-                    <UserButton />
-                </div>
+            <header className="mb-6">
+                <h1 className="text-2xl font-semibold tracking-tight">Library</h1>
+                <p className="mt-0.5 text-sm text-base-content/60">Your videos and images, saved to your account.</p>
             </header>
 
             <UsageMeter refreshKey={usageKey} />
 
-            {/* 🔹 Tabs + action */}
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+            {/* Tabs + action */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
                 <div role="tablist" className="tabs tabs-box">
                     <button
                         role="tab"
@@ -136,28 +130,30 @@ function Home() {
 
                 <Link
                     href={tab === "videos" ? "/video-upload" : "/social-share"}
-                    className="btn btn-primary shadow-lg shadow-primary/20 flex items-center gap-2 normal-case text-sm"
+                    className="btn btn-neutral text-sm"
                 >
                     {tab === "videos" ? "Upload Video" : "New Image"}
                 </Link>
             </div>
 
-            {/* 🔹 Adaptive Alert View */}
             {error && (
-                <div className="alert alert-error mb-6 shadow-md border border-error/20">
+                <div className="alert alert-error mb-6">
                     <span>{error}</span>
                 </div>
             )}
 
-            {/* 🔹 Library grids */}
+            {/* Library grids */}
             {tab === "videos" ? (
                 videos.length === 0 ? (
-                    <div className="border border-dashed border-base-300 bg-base-200/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
-                        <p className="text-base-content/60 text-lg font-medium mb-1">No videos yet</p>
-                        <p className="text-base-content/40 text-sm">Click Upload Video to add your first one.</p>
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-base-300 bg-base-100 p-16 text-center">
+                        <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <Upload className="h-5 w-5" />
+                        </span>
+                        <p className="text-base font-medium">No videos yet</p>
+                        <p className="mt-1 text-sm text-base-content/60">Click Upload Video to add your first one.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {videos.map((video) => (
                             <VideoCard
                                 key={video.id}
@@ -170,12 +166,15 @@ function Home() {
                     </div>
                 )
             ) : images.length === 0 ? (
-                <div className="border border-dashed border-base-300 bg-base-200/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
-                    <p className="text-base-content/60 text-lg font-medium mb-1">No images yet</p>
-                    <p className="text-base-content/40 text-sm">Upload one in Social Studio and it will be saved here.</p>
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-base-300 bg-base-100 p-16 text-center">
+                    <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <ImageIcon className="h-5 w-5" />
+                    </span>
+                    <p className="text-base font-medium">No images yet</p>
+                    <p className="mt-1 text-sm text-base-content/60">Upload one in Social Studio and it will be saved here.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {images.map((image) => (
                         <ImageCard key={image.id} image={image} onDelete={handleDeleteImage} />
                     ))}

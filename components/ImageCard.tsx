@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { getCldImageUrl } from "next-cloudinary"
-import { Trash2, Sparkles, FileUp } from "lucide-react"
+import { Trash2, Sparkles } from "lucide-react"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 import { filesize } from "filesize"
@@ -41,21 +41,26 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onDelete }) => {
     }
 
     return (
-        <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <figure className="aspect-video">
-                <img src={thumb} alt={image.title} className="w-full h-full object-cover" />
+        <div className="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+            <figure className="aspect-video bg-base-200">
+                <img src={thumb} alt={image.title} className="h-full w-full object-cover" />
             </figure>
-            <div className="card-body p-4">
-                <h2 className="card-title text-lg font-bold break-words">{image.title}</h2>
-                <p className="text-sm text-base-content opacity-70">
+            <div className="p-4">
+                <h2 className="break-words text-base font-semibold tracking-tight">{image.title}</h2>
+                <p className="mt-0.5 text-xs text-base-content/60">
                     Uploaded {dayjs(image.createdAt).fromNow()}
                 </p>
-                <div className="flex items-center text-sm mt-1">
-                    <FileUp size={18} className="mr-2 text-primary" />
-                    <span>
-                        {filesize(Number(image.originalSize))} · {image.width}×{image.height}
-                    </span>
-                </div>
+
+                <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-base-300 bg-base-300 text-sm">
+                    <div className="bg-base-100 px-3 py-2">
+                        <dt className="text-xs text-base-content/60">File size</dt>
+                        <dd className="font-medium tabular-nums">{filesize(Number(image.originalSize))}</dd>
+                    </div>
+                    <div className="bg-base-100 px-3 py-2">
+                        <dt className="text-xs text-base-content/60">Dimensions</dt>
+                        <dd className="font-medium tabular-nums">{image.width}×{image.height}</dd>
+                    </div>
+                </dl>
 
                 {confirming ? (
                     <div className="mt-4 rounded-lg border border-error/30 bg-error/10 p-3">
@@ -70,7 +75,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onDelete }) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex justify-between items-center mt-4">
+                    <div className="mt-4 flex items-center justify-between">
                         <button
                             className="btn btn-ghost btn-sm text-error"
                             onClick={() => setConfirming(true)}
@@ -78,7 +83,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onDelete }) => {
                         >
                             <Trash2 size={16} />
                         </button>
-                        <Link href={`/social-share?img=${image.id}`} className="btn btn-primary btn-sm gap-2">
+                        <Link href={`/social-share?img=${image.id}`} className="btn btn-neutral btn-sm gap-2">
                             <Sparkles size={16} /> Open in Studio
                         </Link>
                     </div>

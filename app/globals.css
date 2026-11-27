@@ -7,6 +7,43 @@
 }
 
 /*
+  "pixora" theme for the signed-in app: the same palette as the landing page, mapped onto
+  daisyUI's semantic colors. The app's theme picker still offers every other daisyUI theme.
+*/
+@plugin "daisyui/theme" {
+  name: "pixora";
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f4f4f7;
+  --color-base-300: #e6e6ed;
+  --color-base-content: #111118;
+  --color-primary: #6a4df0;
+  --color-primary-content: #ffffff;
+  --color-secondary: #8d7af2;
+  --color-secondary-content: #ffffff;
+  --color-accent: #5233d6;
+  --color-accent-content: #ffffff;
+  --color-neutral: #111118;
+  --color-neutral-content: #ffffff;
+  --color-info: #2563eb;
+  --color-info-content: #ffffff;
+  --color-success: #17803d;
+  --color-success-content: #ffffff;
+  --color-warning: #d97706;
+  --color-warning-content: #111118;
+  --color-error: #dc2626;
+  --color-error-content: #ffffff;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/*
   Landing page design tokens.
   One accent hue (purple) with a tint ramp, a neutral gray canvas, white cards and
   hairline borders. Prefixed names so they never collide with daisyUI's theme colors.

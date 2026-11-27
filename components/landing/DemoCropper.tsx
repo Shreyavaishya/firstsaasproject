@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { LockIcon, UploadIcon } from "./icons";
+import { btnPrimary, btnSecondary, card, focusRing } from "./ui";
 
 const FORMATS = [
   { name: "Instagram Post", ratio: "1:1", w: 1080, h: 1080 },
@@ -26,9 +28,45 @@ function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, dw: num
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh);
 }
 
-function Tile({ img, f, focus }: { img: HTMLImageElement; f: (typeof FORMATS)[number]; focus: Focus }) {
+// Splits a byte count into a big number and a muted unit, e.g. { value: "2.4", unit: "MB" }
+function splitBytes(bytes: number) {
+  if (bytes < 1024 * 1024) return { value: String(Math.max(1, Math.round(bytes / 1024))), unit: "KB" };
+  return { value: (bytes / (1024 * 1024)).toFixed(1), unit: "MB" };
+}
+
+// One figure in the summary strip: small muted label, big number, muted unit, optional status pill
+function Stat({ label, value, unit, pill }: { label: string; value: string; unit?: string; pill?: string }) {
+  return (
+    <div className="bg-surface px-4 py-3.5 sm:px-5">
+      <p className="text-xs text-muted">{label}</p>
+      <div className="mt-1 flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold tracking-tight tabular-nums">{value}</span>
+        {unit && <span className="text-base text-muted">{unit}</span>}
+        {pill && (
+          <span className="ml-1 self-center rounded-md bg-good-bg px-1.5 py-0.5 text-xs font-medium text-good">
+            {pill}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Tile({
+  img,
+  f,
+  focus,
+  selected,
+  onSelect,
+}: {
+  img: HTMLImageElement;
+  f: (typeof FORMATS)[number];
+  focus: Focus;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const scale = Math.min(220 / f.w, 150 / f.h);
+  const scale = Math.min(190 / f.w, 130 / f.h);
   const W = Math.round(f.w * scale);
   const H = Math.round(f.h * scale);
 
@@ -36,17 +74,29 @@ function Tile({ img, f, focus }: { img: HTMLImageElement; f: (typeof FORMATS)[nu
     const c = ref.current;
     const ctx = c?.getContext("2d");
     if (!c || !ctx) return;
-    c.width = W * 2;
-    c.height = H * 2;
     drawCover(ctx, img, c.width, c.height, focus);
   }, [img, focus, W, H]);
 
   return (
-    <div className="flex flex-col items-start">
-      <canvas ref={ref} style={{ width: W, height: H }} className="rounded-lg border border-white/10" />
-      <p className="mt-2 text-sm font-medium">{f.name}</p>
-      <p className="text-xs text-zinc-400">{f.ratio} · {f.w}×{f.h}</p>
-    </div>
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={`flex flex-col rounded-xl border p-3 text-left transition-colors ${focusRing} ${
+        selected ? "border-accent bg-accent-50/60 ring-1 ring-accent" : "border-line bg-surface hover:border-ink/25"
+      }`}
+    >
+      <div className="flex h-36.5 items-center justify-center rounded-lg bg-canvas">
+        <canvas ref={ref} width={W * 2} height={H * 2} style={{ width: W }} className="h-auto max-w-full rounded-md" />
+      </div>
+      <div className="mt-3 flex items-start justify-between gap-2">
+        <p className="text-sm font-medium">{f.name}</p>
+        {selected && (
+          <span className="shrink-0 rounded-md bg-accent px-1.5 py-0.5 text-xs font-medium text-white">Selected</span>
+        )}
+      </div>
+      <p className="mt-0.5 text-xs text-muted tabular-nums">{f.ratio} · {f.w}×{f.h}</p>
+    </button>
   );
 }
 
@@ -71,13 +121,16 @@ function makeSample(): Promise<HTMLImageElement> {
 export default function DemoCropper() {
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [src, setSrc] = useState<string | null>(null);
+  const [bytes, setBytes] = useState<number | null>(null);
   const [focus, setFocus] = useState<Focus>({ x: 0.5, y: 0.5 });
+  const [selectedName, setSelectedName] = useState(FORMATS[1].name);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const load = (image: HTMLImageElement, url: string) => {
+  const load = (image: HTMLImageElement, url: string, size: number | null) => {
     setFocus({ x: 0.5, y: 0.5 });
+    setBytes(size);
     setImg(image);
     setSrc(url);
   };
@@ -89,7 +142,7 @@ export default function DemoCropper() {
     if (file.size > MAX_BYTES) return setError("That file is too big for the demo (max 15 MB).");
     const url = URL.createObjectURL(file);
     const image = new Image();
-    image.onload = () => load(image, url);
+    image.onload = () => load(image, url, file.size);
     image.onerror = () => setError("We couldn’t read that image. Try a JPG or PNG.");
     image.src = url;
   };
@@ -97,7 +150,7 @@ export default function DemoCropper() {
   const useSample = async () => {
     setError(null);
     const image = await makeSample();
-    load(image, image.src);
+    load(image, image.src, null);
   };
 
   const pickFocus = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -109,59 +162,104 @@ export default function DemoCropper() {
     return (
       <div className="mx-auto mt-10 max-w-3xl">
         <div
+          role="button"
+          tabIndex={0}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
           onClick={() => inputRef.current?.click()}
-          className={`cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition ${
-            dragOver ? "border-purple-400 bg-purple-500/10" : "border-white/20 bg-white/5 hover:border-white/40"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click(); }
+          }}
+          className={`cursor-pointer rounded-2xl border border-dashed p-10 text-center transition-colors ${focusRing} ${
+            dragOver ? "border-accent bg-accent-50" : "border-ink/20 bg-surface hover:border-accent/60"
           }`}
         >
-          <p className="text-lg font-semibold">Drop a photo here, or click to choose one</p>
-          <p className="mt-2 text-sm text-zinc-400">
-            See it cropped for every platform instantly. Your photo stays in your browser and is never uploaded.
+          <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-accent-50 text-accent-strong">
+            <UploadIcon />
+          </span>
+          <p className="mt-4 text-base font-medium">Drop a photo here, or click to choose one</p>
+          <p className="mt-1 text-sm text-ink-2">See it cropped for every platform instantly.</p>
+          <p className="mt-0.5 text-xs text-muted">JPG, PNG or WEBP, up to 15 MB</p>
+          <p className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-canvas px-2.5 py-1 text-xs text-ink-2">
+            <LockIcon />
+            Your photo stays in your browser and is never uploaded.
           </p>
           <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
         </div>
         <div className="mt-4 flex justify-center">
-          <button onClick={useSample} className="rounded-full border border-white/20 px-5 py-2 text-sm hover:bg-white/10">
+          <button type="button" onClick={useSample} className={btnSecondary}>
             No photo handy? Try a sample
           </button>
         </div>
-        {error && <p className="mt-4 text-center text-sm text-red-400">{error}</p>}
+        {error && <p role="alert" className="mt-4 text-center text-sm text-red-600">{error}</p>}
       </div>
     );
   }
 
+  const selected = FORMATS.find((f) => f.name === selectedName) ?? FORMATS[0];
+  const size = bytes === null ? null : splitBytes(bytes);
+
   return (
-    <div className="mx-auto mt-10 max-w-5xl rounded-3xl border border-white/10 bg-white/5 p-6 text-left">
-      <div className="grid gap-8 md:grid-cols-[240px_1fr]">
-        <div>
-          <p className="mb-2 text-sm font-medium">Click what should stay in frame</p>
-          <div onClick={pickFocus} className="relative cursor-crosshair overflow-hidden rounded-xl border border-white/10">
+    <div className={`${card} mx-auto mt-10 max-w-5xl p-4 text-left shadow-[0_1px_2px_rgb(17_17_24/0.04)] sm:p-5`}>
+      {/* Summary strip: what we have, at a glance */}
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-4">
+        <Stat label="Sizes ready" value={String(FORMATS.length)} />
+        <Stat label="Your photo" value={`${img.width}×${img.height}`} unit="px" />
+        {size ? <Stat label="File size" value={size.value} unit={size.unit} /> : <Stat label="Source" value="Sample" />}
+        <Stat label="Uploaded" value="0" unit="B" pill="Local only" />
+      </div>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-[260px_1fr]">
+        <div className="rounded-xl border border-line p-4">
+          <p className="text-sm font-medium">Your photo</p>
+          <p className="mt-0.5 text-xs text-muted">Click what should stay in frame</p>
+          <div onClick={pickFocus} className="relative mt-3 cursor-crosshair overflow-hidden rounded-lg border border-line">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt="Your photo" className="block w-full" draggable={false} />
             <span
-              className="pointer-events-none absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-purple-500/60 shadow"
+              className="pointer-events-none absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-accent shadow-md"
               style={{ left: `${focus.x * 100}%`, top: `${focus.y * 100}%` }}
             />
           </div>
         </div>
-        <div className="flex flex-wrap items-end gap-6">
-          {FORMATS.map((f) => <Tile key={f.name} img={img} f={f} focus={focus} />)}
+
+        <div className="rounded-xl border border-line p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-sm font-medium">Sizes</p>
+            <p className="text-xs text-muted">Pick one to export</p>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3">
+            {FORMATS.map((f) => (
+              <Tile
+                key={f.name}
+                img={img}
+                f={f}
+                focus={focus}
+                selected={f.name === selected.name}
+                onSelect={() => setSelectedName(f.name)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
-        <p className="text-sm text-zinc-400">
-          This preview uses a simple crop. Signed-in exports use automatic subject detection.
-        </p>
-        <div className="flex gap-3">
-          <button onClick={() => { setImg(null); setSrc(null); }} className="rounded-full border border-white/20 px-5 py-2 text-sm hover:bg-white/10">
+      {/* The selected size, its details and the action all point at the same thing */}
+      <div className="mt-4 flex flex-col gap-3 rounded-xl border border-line bg-canvas p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div>
+          <p className="text-sm font-medium">
+            {selected.name} <span className="font-normal text-muted tabular-nums">· {selected.ratio} · {selected.w}×{selected.h}</span>
+          </p>
+          <p className="mt-0.5 text-xs text-muted">
+            This preview uses a simple crop. Signed-in exports use automatic subject detection.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <button type="button" onClick={() => { setImg(null); setSrc(null); setBytes(null); }} className={btnSecondary}>
             Try another photo
           </button>
-          <Link href="/sign-up" className="rounded-full bg-linear-to-r from-purple-500 to-cyan-500 px-5 py-2 text-sm font-semibold">
-            Create a free account
+          <Link href="/sign-up" className={btnPrimary}>
+            Create a free account to export
           </Link>
         </div>
       </div>

@@ -1,3 +1,6 @@
+import { ChevronIcon } from "./icons";
+import { card, focusRing, sectionTitle } from "./ui";
+
 const faqs = [
   { q: "Are my files private?", a: "Your library is only visible to you. Files are stored with our media provider, Cloudinary, and are not listed publicly." },
   { q: "How long do you keep my files?", a: "Until you delete them. You can delete any image or video from your library at any time, and it is removed from storage." },
@@ -10,12 +13,17 @@ const faqs = [
 export default function Faq() {
   return (
     <section id="faq" className="px-6 py-20">
-      <h2 className="text-center text-3xl font-bold sm:text-4xl">Questions</h2>
-      <div className="mx-auto mt-10 max-w-3xl space-y-3">
+      <h2 className={`text-center ${sectionTitle}`}>Questions</h2>
+      <div className={`${card} mx-auto mt-10 max-w-3xl divide-y divide-line overflow-hidden`}>
         {faqs.map((f) => (
-          <details key={f.q} className="group rounded-xl border border-white/10 bg-white/5 p-5">
-            <summary className="cursor-pointer list-none font-medium">{f.q}</summary>
-            <p className="mt-3 text-sm text-zinc-400">{f.a}</p>
+          <details key={f.q} className="group">
+            <summary
+              className={`flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-medium hover:bg-canvas/60 [&::-webkit-details-marker]:hidden ${focusRing}`}
+            >
+              {f.q}
+              <ChevronIcon className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
+            </summary>
+            <p className="px-5 pb-4 text-sm text-ink-2">{f.a}</p>
           </details>
         ))}
       </div>

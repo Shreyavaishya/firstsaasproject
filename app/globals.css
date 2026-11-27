@@ -5,3 +5,27 @@
   themes: all;
   darkTheme: "dark";
 }
+
+/*
+  Landing page design tokens.
+  One accent hue (purple) with a tint ramp, a neutral gray canvas, white cards and
+  hairline borders. Prefixed names so they never collide with daisyUI's theme colors.
+*/
+@theme {
+  --color-canvas: #f4f4f7;
+  --color-surface: #ffffff;
+  --color-line: #e6e6ed;
+
+  --color-ink: #111118;
+  --color-ink-2: #4b4b5e;
+  --color-muted: #6b6b7e;
+
+  --color-accent: #6a4df0;
+  --color-accent-strong: #5233d6;
+  --color-accent-50: #f3f0ff;
+  --color-accent-100: #e6e0ff;
+  --color-accent-200: #d3c9ff;
+
+  --color-good: #17803d;
+  --color-good-bg: #e6f6ec;
+}
